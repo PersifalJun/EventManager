@@ -5,22 +5,25 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import ru.haritonenko.eventmanager.event.db.entity.EventEntity;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
+@Setter
+@ToString(exclude = {"events"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 @Table(name = "locations")
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventLocationEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Integer id;
 
     @NotBlank(message = "Location name can not be blank")
@@ -43,11 +46,17 @@ public class EventLocationEntity {
     @Column(nullable = false)
     private String description;
 
+    @NotNull(message = "Event events can not be null")
     @OneToMany(mappedBy = "location")
     private List<EventEntity> events = new ArrayList<>();
 
     public void addEvent(EventEntity e) {
         events.add(e);
         e.setLocation(this);
+    }
+
+    public void removeEvent(EventEntity e) {
+        events.remove(e);
+        e.setLocation(null);
     }
 }

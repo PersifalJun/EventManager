@@ -1,7 +1,6 @@
 package ru.haritonenko.eventmanager.user.security.configuration;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -27,20 +26,12 @@ import ru.haritonenko.eventmanager.user.security.jwt.filter.JwtTokenFilter;
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
-    @Autowired
     private final CustomUserDetailsService customUserDetailsService;
-
-    @Autowired
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-
-    @Autowired
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
-    @Autowired
-    private final JwtTokenFilter jwtTokenFilter;
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenFilter jwtTokenFilter) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
@@ -88,7 +79,7 @@ public class SecurityConfiguration {
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration authenticationConfiguration
-    ) {
+    ){
         return authenticationConfiguration.getAuthenticationManager();
     }
 

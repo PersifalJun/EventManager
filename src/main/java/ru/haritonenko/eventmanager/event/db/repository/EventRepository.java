@@ -1,0 +1,103 @@
+package ru.haritonenko.eventmanager.event.db.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+import ru.haritonenko.eventmanager.event.api.status.EventStatus;
+import ru.haritonenko.eventmanager.event.db.entity.EventEntity;
+
+import org.springframework.data.domain.Pageable;
+import java.math.BigDecimal;
+import java.util.List;
+
+public interface EventRepository extends JpaRepository<EventEntity, Integer> {
+
+    @Transactional(readOnly = true)
+    @Query("""
+            SELECT e FROM EventEntity e
+            WHERE e.owner.id = :id  
+           """)
+    List<EventEntity> searchCreatedEventsByUserId(
+            @Param("id") Integer ownerId,
+            Pageable pageable
+    );
+
+    @Transactional(readOnly = true)
+    @Query(value = """
+            SELECT e FROM UserEntity u
+            JOIN u.bookedEvents e
+            WHERE u.id = :id
+            """)
+    List<EventEntity> searchBookedEventsByUserId(
+            @Param("id") Integer userId,
+            Pageable pageable
+    );
+
+    @Transactional(readOnly = true)
+    @Query("""
+                SELECT e FROM EventEntity e
+                WHERE (:name IS NULL OR e.name = :name)
+                AND (:placesMin IS NULL OR e.maxPlaces >= :placesMin)
+                AND (:placesMax IS NULL OR e.maxPlaces <= :placesMax)
+                AND (:dateStartAfter IS NULL OR e.date >= :dateStartAfter)
+                AND (:dateStartBefore IS NULL OR e.date <= :dateStartBefore)
+                AND (:costMin IS NULL OR e.cost >= :costMin)
+                AND (:costMax IS NULL OR e.cost <= :costMax)
+                AND (:durationMin IS NULL OR e.duration >= :durationMin)
+                AND (:durationMax IS NULL OR e.duration <= :durationMax)
+                AND (:locationId IS NULL OR e.location.id = :locationId)
+                AND (:eventStatus IS NULL OR e.status = :eventStatus)
+            """)
+    List<EventEntity> searchEventsWithFilter(String name,
+                                             @Param("placesMin") Integer minPlacesCount,
+                                             @Param("placesMax") Integer maxPlacesCount,
+                                             @Param("dateStartAfter") String firstDate,
+                                             @Param("dateStartBefore") String lastDate,
+                                             @Param("costMin") BigDecimal costMin,
+                                             @Param("costMax") BigDecimal costMax,
+                                             @Param("durationMin") Integer durationMin,
+                                             @Param("durationMax") Integer durationMax,
+                                             @Param("locationId") Integer locationId,
+                                             @Param("eventStatus") EventStatus status,
+                                             Pageable pageable
+    );
+
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+                UPDATE EventEntity e
+                SET e.occupiedPlaces = e.occupiedPlaces + 1
+                WHERE e.id = :eventId AND e.occupiedPlaces < e.maxPlaces
+            """)
+    int updateEventAfterUserRegistration(
+            @Param("eventId") Integer eventId
+    );
+
+    @Modifying
+    @Query("""
+                UPDATE EventEntity e
+                SET e.occupiedPlaces = e.occupiedPlaces - 1
+                WHERE e.id = :eventId AND e.occupiedPlaces > 0
+            """)
+    int updateEventAfterCancelUserRegistration(
+            @Param("eventId") Integer eventId);
+
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE EventEntity e
+        SET e.occupiedPlaces = e.occupiedPlaces + 1
+        WHERE e.id = :eventId AND e.occupiedPlaces < e.maxPlaces
+    """)
+    int incOccupiedPlaces(@Param("eventId") Integer eventId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE EventEntity e
+        SET e.occupiedPlaces = e.occupiedPlaces - 1
+        WHERE e.id = :eventId AND e.occupiedPlaces > 0
+    """)
+    int decOccupiedPlaces(@Param("eventId") Integer eventId);
+}
