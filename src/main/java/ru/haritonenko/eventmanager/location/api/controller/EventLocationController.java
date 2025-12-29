@@ -66,13 +66,11 @@ public class EventLocationController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteById(
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteById(
             @PathVariable Integer id
     ) {
         log.info("Delete request for deleting location by id: {}", id);
         locationService.deleteLocation(id);
-        return ResponseEntity
-                .status(HttpStatus.NO_CONTENT)
-                .build();
     }
 }

@@ -7,8 +7,14 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.haritonenko.eventmanager.event.api.exception.EventCountPlacesException;
+import ru.haritonenko.eventmanager.event.api.exception.EventInvalidStatusException;
+import ru.haritonenko.eventmanager.event.api.exception.EventNotFoundException;
+import ru.haritonenko.eventmanager.event.api.exception.EventPlacesOverflowException;
+import ru.haritonenko.eventmanager.user.api.exception.UserAlreadyRegisteredOnEventException;
 import ru.haritonenko.eventmanager.location.api.exception.LocationNotFoundException;
 import ru.haritonenko.eventmanager.user.api.exception.UserAlreadyRegisteredException;
+import ru.haritonenko.eventmanager.user.api.exception.UserBookedEventException;
 import ru.haritonenko.eventmanager.user.api.exception.UserNotFoundException;
 import ru.haritonenko.eventmanager.error.errorDto.ErrorMessageResponse;
 
@@ -95,6 +101,92 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(errorDto);
     }
+
+    @ExceptionHandler(EventNotFoundException.class)
+    public ResponseEntity<ErrorMessageResponse> handleEventNotFoundException(
+            EventNotFoundException ex
+    ) {
+        log.error("Got EventNotFoundException", ex);
+        var errorDto = getErrorMessageResponse("Event search error",
+                ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(errorDto);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorMessageResponse> handleIllegalArgumentException(
+            IllegalArgumentException ex
+    ) {
+        log.error("Got IllegalArgumentException", ex);
+        var errorDto = getErrorMessageResponse("Illegal argument error",
+                ex.getMessage());
+        return ResponseEntity.
+                status(HttpStatus.BAD_REQUEST)
+                .body(errorDto);
+    }
+
+    @ExceptionHandler(EventPlacesOverflowException.class)
+    public ResponseEntity<ErrorMessageResponse> handleEventPlacesOverflowException(
+            EventPlacesOverflowException ex
+    ) {
+        log.error("Got EventPlacesOverflowException", ex);
+        var errorDto = getErrorMessageResponse("Error while register on event",
+                ex.getMessage());
+        return ResponseEntity.
+                status(HttpStatus.BAD_REQUEST)
+                .body(errorDto);
+    }
+
+    @ExceptionHandler(UserAlreadyRegisteredOnEventException.class)
+    public ResponseEntity<ErrorMessageResponse> handleUserAlreadyRegisteredOnEventException(
+            UserAlreadyRegisteredOnEventException ex
+    ) {
+        log.error("Got UserAlreadyRegisteredOnEventException", ex);
+        var errorDto = getErrorMessageResponse("Error while register on event",
+                ex.getMessage());
+        return ResponseEntity.
+                status(HttpStatus.BAD_REQUEST)
+                .body(errorDto);
+    }
+
+    @ExceptionHandler(EventCountPlacesException.class)
+    public ResponseEntity<ErrorMessageResponse> handleEventCountPlacesException(
+            EventCountPlacesException ex
+    ) {
+        log.error("Got EventCountPlacesException", ex);
+        var errorDto = getErrorMessageResponse("Error while matching location and event places count",
+                ex.getMessage());
+        return ResponseEntity.
+                status(HttpStatus.BAD_REQUEST)
+                .body(errorDto);
+    }
+
+    @ExceptionHandler(UserBookedEventException.class)
+    public ResponseEntity<ErrorMessageResponse> handleUserBookedEventException(
+            UserBookedEventException ex
+    ) {
+        log.error("Got UserBookedEventException", ex);
+        var errorDto = getErrorMessageResponse("Error while cancelling registry request",
+                ex.getMessage());
+        return ResponseEntity.
+                status(HttpStatus.BAD_REQUEST)
+                .body(errorDto);
+    }
+
+    @ExceptionHandler(EventInvalidStatusException.class)
+    public ResponseEntity<ErrorMessageResponse> handleEventInvalidStatusException(
+            EventInvalidStatusException ex
+    ) {
+        log.error("Got EventInvalidStatusException", ex);
+        var errorDto = getErrorMessageResponse("Error while checking status for deleting" +
+                        " event or registration request",
+                ex.getMessage());
+        return ResponseEntity.
+                status(HttpStatus.BAD_REQUEST)
+                .body(errorDto);
+    }
+
 
     private ErrorMessageResponse getErrorMessageResponse(
             String message,

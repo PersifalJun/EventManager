@@ -1,14 +1,13 @@
-package ru.haritonenko.eventmanager.user.security.custom;
+package ru.haritonenko.eventmanager.user.security.custom.handler;
 
-
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 import ru.haritonenko.eventmanager.error.errorDto.ErrorMessageResponse;
 import tools.jackson.databind.ObjectMapper;
@@ -18,33 +17,28 @@ import java.time.LocalDateTime;
 
 @Slf4j
 @Component
-public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
+@RequiredArgsConstructor
+public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
     private final ObjectMapper objectMapper;
 
-    public CustomAuthenticationEntryPoint(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
-
     @Override
-    public void commence(
+    public void handle(
             HttpServletRequest request,
             HttpServletResponse response,
-            AuthenticationException authException
-    ) throws IOException, ServletException {
-        log.error("Handling authentication exception", authException);
+            AccessDeniedException accessDeniedException
+    ) throws IOException {
+        log.error("Handling access denied exception", accessDeniedException);
         var messageResponse = new ErrorMessageResponse(
-                "Failed to authenticate",
-                authException.getMessage(),
+                "Forbidden",
+                accessDeniedException.getMessage(),
                 LocalDateTime.now().toString()
         );
 
         var stringResponse = objectMapper.writeValueAsString(messageResponse);
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setStatus(HttpStatus.FORBIDDEN.value());
         response.getWriter().write(stringResponse);
     }
-
-
 }

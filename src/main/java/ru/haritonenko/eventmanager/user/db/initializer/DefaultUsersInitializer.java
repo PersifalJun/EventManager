@@ -11,6 +11,8 @@ import ru.haritonenko.eventmanager.user.db.entity.UserEntity;
 import ru.haritonenko.eventmanager.user.db.repository.UserRepository;
 import ru.haritonenko.eventmanager.user.api.role.UserRole;
 
+import java.util.ArrayList;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -36,7 +38,9 @@ public class DefaultUsersInitializer {
                 login,
                 passwordEncoder.encode(password),
                 21,
-                role
+                role,
+                new ArrayList<>(),
+                new ArrayList<>()
         );
         userRepository.save(entity);
         log.info("Default user '{}' created with role {}", login, role);

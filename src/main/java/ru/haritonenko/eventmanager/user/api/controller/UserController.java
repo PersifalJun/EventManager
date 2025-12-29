@@ -6,14 +6,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import ru.haritonenko.eventmanager.user.security.jwt.JwtAuthenticationService;
+import ru.haritonenko.eventmanager.user.security.service.AuthenticationService;
 import ru.haritonenko.eventmanager.user.security.jwt.JwtResponse;
 import ru.haritonenko.eventmanager.user.api.converter.UserDtoConverter;
 import ru.haritonenko.eventmanager.user.api.dto.UserDto;
 import ru.haritonenko.eventmanager.user.api.dto.authorization.UserCredentials;
 import ru.haritonenko.eventmanager.user.api.dto.registration.UserRegistration;
 import ru.haritonenko.eventmanager.user.service.UserService;
+
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -23,7 +26,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserDtoConverter converter;
-    private final JwtAuthenticationService jwtAuthenticationService;
+    private final AuthenticationService jwtAuthenticationService;
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -55,5 +58,13 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new JwtResponse(token));
+    }
+
+    @GetMapping("/debug/auth")
+    public Object auth(Authentication authentication) {
+        return Map.of(
+                "name", authentication == null ? null : authentication.getName(),
+                "authorities", authentication == null ? null : authentication.getAuthorities()
+        );
     }
 }

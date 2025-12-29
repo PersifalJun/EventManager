@@ -14,7 +14,7 @@ public record EventLocationDto(
         @Size(min = 5, max = 30, message = "Min address size is 5, max is 30")
         String address,
         @NotNull(message = "Location capacity can not be null")
-        @Min(5)
+        @Min(value = 5, message = "Min location capacity is 5")
         Integer capacity,
         @NotBlank(message = "Location description can not be blank")
         @Size(min = 10, max = 100, message = "Min description size is 10, max is 100")

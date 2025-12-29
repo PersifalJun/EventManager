@@ -14,6 +14,8 @@ import ru.haritonenko.eventmanager.user.api.exception.UserNotFoundException;
 import ru.haritonenko.eventmanager.user.db.repository.UserRepository;
 import ru.haritonenko.eventmanager.user.api.role.UserRole;
 
+import java.util.ArrayList;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -49,7 +51,9 @@ public class UserService {
                 userFromRegistration.login(),
                 hashedPass,
                 userFromRegistration.age(),
-                UserRole.USER
+                UserRole.USER,
+                new ArrayList<>(),
+                new ArrayList<>()
         );
         var savedUserEntity = userRepository.save(userToSave);
         log.info("User has successfully registered");

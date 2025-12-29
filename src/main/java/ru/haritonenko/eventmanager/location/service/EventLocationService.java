@@ -14,6 +14,7 @@ import ru.haritonenko.eventmanager.location.db.repository.EventLocationRepositor
 
 import org.springframework.data.domain.Pageable;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -24,18 +25,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EventLocationService {
 
+    private final EventLocationRepository locationRepository;
+    private final EventLocationEntityConverter converter;
+
     @Value("${app.location.default-page-size}")
     private int defaultPageSize;
 
     @Value("${app.location.default-page-number}")
     private int defaultPageNumber;
-    private final EventLocationRepository locationRepository;
-    private final EventLocationEntityConverter converter;
 
     public List<EventLocation> getAllLocations(
             EventLocationSearchFilter locationFilter
     ) {
-        log.info("Searching all locations");
+        log.info("Searching locations");
         int pageSize = Objects.nonNull(locationFilter.pageSize())
                 ? locationFilter.pageSize() : defaultPageSize;
         int pageNumber = Objects.nonNull(locationFilter.pageNumber())
@@ -44,7 +46,6 @@ public class EventLocationService {
         Pageable pageable = Pageable
                 .ofSize(pageSize)
                 .withPage(pageNumber);
-        log.info("All locations were found");
         return locationRepository.searchBooks(
                         locationFilter.name(),
                         locationFilter.address(),
@@ -64,7 +65,8 @@ public class EventLocationService {
                 eventLocationToCreate.name(),
                 eventLocationToCreate.address(),
                 eventLocationToCreate.capacity(),
-                eventLocationToCreate.description()
+                eventLocationToCreate.description(),
+                new ArrayList<>()
         );
         var savedLocationEntity = locationRepository.save(newLocation);
         log.info("Location was successfully created");
@@ -76,7 +78,7 @@ public class EventLocationService {
         log.info("Getting location by id: {}", id);
         var foundLocation = locationRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("Error while searching for location by id: {}", id);
+                    log.warn("Error while searching for location by id: {}", id);
                     return new LocationNotFoundException(
                             "No found location by id = %s".formatted(id));
                 });
@@ -86,11 +88,7 @@ public class EventLocationService {
 
     public EventLocation updateLocation(Integer id, EventLocation eventLocationToUpdate) {
         log.info("Updating location with id: {}", id);
-        if (!locationRepository.existsById(id)) {
-            log.error("Error while checking location is existed by id: {}", id);
-            throw new LocationNotFoundException(
-                    "No found location by id = %s".formatted(id));
-        }
+        checkLocationIsExistedByIdOrThrow(id);
         locationRepository.updateLocation(
                 id,
                 eventLocationToUpdate.name(),
@@ -106,12 +104,18 @@ public class EventLocationService {
     @Transactional
     public void deleteLocation(Integer id) {
         log.info("Deleting location by id: {}", id);
+        checkLocationIsExistedByIdOrThrow(id);
+        locationRepository.deleteById(id);
+        log.info("Location was successfully deleted by id: {}", id);
+    }
+
+    private void checkLocationIsExistedByIdOrThrow(
+            Integer id
+    ) {
         if (!locationRepository.existsById(id)) {
-            log.error("Error while finding location by id: {}", id);
+            log.warn("Error while finding location by id: {}", id);
             throw new LocationNotFoundException(
                     "No found location by id = %s".formatted(id));
         }
-        locationRepository.deleteById(id);
-        log.info("Location was successfully deleted by id: {}", id);
     }
 }

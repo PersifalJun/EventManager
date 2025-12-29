@@ -11,7 +11,7 @@ public record UserRegistration(
         @NotBlank(message = "User password can't be blank")
         @Size(min = 4, max = 50, message = "Min password size is 4, max is 50")
         String password,
-        @Min(18)
+        @Min(value = 18, message = "Min age size is 18")
         int age
 ) {
 }
