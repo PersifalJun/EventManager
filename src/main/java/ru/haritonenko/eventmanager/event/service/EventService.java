@@ -402,15 +402,15 @@ public class EventService {
         }
     }
 
-    private void checkUserIsNotAlreadyRegisteredOnEventOrThrow(
-            EventEntity eventToBeBookedByUser,
-            UserEntity userToBeRegisteredOn
-    ) {
-        if (userToBeRegisteredOn.getBookedEvents().contains(eventToBeBookedByUser)) {
-            log.error("Error while checking event members");
-            throw new UserAlreadyRegisteredOnEventException("You have already registered on this event");
-        }
-    }
+//    private void checkUserIsNotAlreadyRegisteredOnEventOrThrow(
+//            EventEntity eventToBeBookedByUser,
+//            UserEntity userToBeRegisteredOn
+//    ) {
+//        if (userToBeRegisteredOn.getBookedEvents().contains(eventToBeBookedByUser)) {
+//            log.error("Error while checking event members");
+//            throw new UserAlreadyRegisteredOnEventException("You have already registered on this event");
+//        }
+//    }
 
     private void checkUserOrAdminRoleToUpdateOrDelete(
             UserEntity user,
@@ -443,14 +443,14 @@ public class EventService {
         }
     }
 
-    private void checkUserBookedEventsListContainsEventOrThrow(
-            UserEntity user,
-            EventEntity event
-    ) {
-        if (!user.getBookedEvents().contains(event)) {
-            log.error("Error while cancelling registry request");
-            throw new UserBookedEventException("This event isn't booked by this user");
-        }
-    }
+//    private void checkUserBookedEventsListContainsEventOrThrow(
+//            UserEntity user,
+//            EventEntity event
+//    ) {
+//        if (!user.getBookedEvents().contains(event)) {
+//            log.error("Error while cancelling registry request");
+//            throw new UserBookedEventException("This event isn't booked by this user");
+//        }
+//    }
 }
 

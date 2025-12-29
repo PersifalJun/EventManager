@@ -24,16 +24,12 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
             Pageable pageable
     );
 
-    @Transactional(readOnly = true)
-    @Query(value = """
-            SELECT e FROM UserEntity u
-            JOIN u.bookedEvents e
-            WHERE u.id = :id
-            """)
-    List<EventEntity> searchBookedEventsByUserId(
-            @Param("id") Integer userId,
-            Pageable pageable
-    );
+    @Query("""
+    SELECT r.event
+    FROM EventRegistrationEntity r
+    WHERE r.user.id = :id AND r.status = ru.haritonenko.eventmanager.event.registration.status.EventRegistrationStatus.ACTIVE
+""")
+    List<EventEntity> searchBookedEventsByUserId(@Param("id") Integer userId, Pageable pageable);
 
     @Transactional(readOnly = true)
     @Query("""
