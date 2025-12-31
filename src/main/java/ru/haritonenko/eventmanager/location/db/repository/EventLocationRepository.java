@@ -43,5 +43,4 @@ public interface EventLocationRepository extends JpaRepository<EventLocationEnti
             @Param("capacity") Integer capacity,
             @Param("description") String description
     );
-
 }

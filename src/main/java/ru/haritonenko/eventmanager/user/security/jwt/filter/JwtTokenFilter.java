@@ -47,7 +47,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             log.info("Getting login from token");
             loginFromToken = jwtTokenManager.getLoginFromToken(jwtTokenWithoutWordBearer);
         } catch (Exception ex) {
-            log.error("Error while reading jwt", ex);
+            log.warn("Error while reading jwt", ex);
             filterChain.doFilter(request, response);
             return;
         }

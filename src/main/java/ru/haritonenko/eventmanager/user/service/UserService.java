@@ -30,7 +30,7 @@ public class UserService {
         log.info("Getting user by id: {}", id);
         var foundUser = userRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("Error while getting user by id");
+                    log.warn("Error while getting user by id");
                     return new UserNotFoundException(
                             "No found user by id = %s".formatted(id));
                 });
@@ -42,7 +42,7 @@ public class UserService {
     public User register(UserRegistration userFromRegistration) {
         log.info("User registration started");
         if (userRepository.existsByLogin(userFromRegistration.login())) {
-            log.error("Error while register user");
+            log.warn("Error while register user");
             throw new UserAlreadyRegisteredException("This user has already registered");
         }
         var hashedPass = passwordEncoder.encode(userFromRegistration.password());
@@ -64,7 +64,7 @@ public class UserService {
         log.info("Searching for user by login: {}", login);
         var foundUser = userRepository.findByLogin(login)
                 .orElseThrow(() -> {
-                    log.error("Error while finding user by login");
+                    log.warn("Error while finding user by login");
                     return new UserNotFoundException("User not found");
                 });
         log.info("User was successfully found by login: {}", login);

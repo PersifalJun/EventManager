@@ -23,7 +23,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         log.info("Loading user by login: {}", username);
         var user = userRepository.findByLogin(username)
                 .orElseThrow(() -> {
-                    log.error("Error while searching for user by login: {}", username);
+                    log.warn("Error while searching for user by login: {}", username);
                     return new UserNotFoundException("User not found by login: %s".formatted(username));
                 });
         log.info("User with login: {} was successfully loaded", username);

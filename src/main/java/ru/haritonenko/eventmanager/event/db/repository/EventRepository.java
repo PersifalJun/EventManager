@@ -9,16 +9,19 @@ import ru.haritonenko.eventmanager.event.api.status.EventStatus;
 import ru.haritonenko.eventmanager.event.db.entity.EventEntity;
 
 import org.springframework.data.domain.Pageable;
+import ru.haritonenko.eventmanager.event.registration.status.EventRegistrationStatus;
+
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 
 public interface EventRepository extends JpaRepository<EventEntity, Integer> {
 
     @Transactional(readOnly = true)
     @Query("""
-            SELECT e FROM EventEntity e
-            WHERE e.owner.id = :id  
-           """)
+             SELECT e FROM EventEntity e
+             WHERE e.owner.id = :id  
+            """)
     List<EventEntity> searchCreatedEventsByUserId(
             @Param("id") Integer ownerId,
             Pageable pageable
@@ -26,12 +29,13 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
 
     @Transactional(readOnly = true)
     @Query(value = """
-            SELECT e FROM UserEntity u
-            JOIN u.bookedEvents e
-            WHERE u.id = :id
+            SELECT r.event
+            FROM EventRegistrationEntity r
+            WHERE r.user.id = :id AND r.status = :status
             """)
     List<EventEntity> searchBookedEventsByUserId(
             @Param("id") Integer userId,
+            @Param("status") EventRegistrationStatus status,
             Pageable pageable
     );
 
@@ -71,33 +75,24 @@ public interface EventRepository extends JpaRepository<EventEntity, Integer> {
                 SET e.occupiedPlaces = e.occupiedPlaces + 1
                 WHERE e.id = :eventId AND e.occupiedPlaces < e.maxPlaces
             """)
-    int updateEventAfterUserRegistration(
-            @Param("eventId") Integer eventId
-    );
+    int incOccupiedPlaces(@Param("eventId") Integer eventId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
                 UPDATE EventEntity e
                 SET e.occupiedPlaces = e.occupiedPlaces - 1
                 WHERE e.id = :eventId AND e.occupiedPlaces > 0
             """)
-    int updateEventAfterCancelUserRegistration(
-            @Param("eventId") Integer eventId);
-
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("""
-        UPDATE EventEntity e
-        SET e.occupiedPlaces = e.occupiedPlaces + 1
-        WHERE e.id = :eventId AND e.occupiedPlaces < e.maxPlaces
-    """)
-    int incOccupiedPlaces(@Param("eventId") Integer eventId);
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("""
-        UPDATE EventEntity e
-        SET e.occupiedPlaces = e.occupiedPlaces - 1
-        WHERE e.id = :eventId AND e.occupiedPlaces > 0
-    """)
     int decOccupiedPlaces(@Param("eventId") Integer eventId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+                UPDATE EventEntity e
+                SET e.occupiedPlaces = 0
+                WHERE e.id = :eventId
+            """)
+    int resetOccupiedPlaces(@Param("eventId") Integer eventId);
+
+    @Transactional(readOnly = true)
+    List<EventEntity> findByStatusIn(Collection<EventStatus> statuses);
 }

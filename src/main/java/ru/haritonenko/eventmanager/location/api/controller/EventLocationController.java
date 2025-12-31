@@ -7,7 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.haritonenko.eventmanager.location.api.converter.EventLocationDtoConverter;
+import ru.haritonenko.eventmanager.location.api.dto.EventLocationCreateRequestDto;
 import ru.haritonenko.eventmanager.location.api.dto.EventLocationDto;
+import ru.haritonenko.eventmanager.location.api.dto.EventLocationUpdateRequestDto;
 import ru.haritonenko.eventmanager.location.api.dto.filter.EventLocationSearchFilter;
 import ru.haritonenko.eventmanager.location.service.EventLocationService;
 
@@ -44,11 +46,11 @@ public class EventLocationController {
 
     @PostMapping
     public ResponseEntity<EventLocationDto> createLocation(
-            @RequestBody @Valid EventLocationDto locationFromCreateRequest
+            @RequestBody @Valid EventLocationCreateRequestDto locationFromCreateRequest
     ) {
         log.info("Post request for creation a new location: {}", locationFromCreateRequest);
         var createdLocation = locationService
-                .createLocation(converter.toDomain(locationFromCreateRequest));
+                .createLocation(converter.fromCreateDtoToDomain(locationFromCreateRequest));
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(converter.toDto(createdLocation));
@@ -57,11 +59,11 @@ public class EventLocationController {
     @PutMapping("/{id}")
     public EventLocationDto updateLocation(
             @PathVariable Integer id,
-            @RequestBody @Valid EventLocationDto locationFromUpdateRequest
+            @RequestBody @Valid EventLocationUpdateRequestDto locationFromUpdateRequest
     ) {
         log.info("Put request for updating location: {}", locationFromUpdateRequest);
         var updatedLocation = locationService
-                .updateLocation(id, converter.toDomain(locationFromUpdateRequest));
+                .updateLocation(id, converter.fromUpdateDtoToDomain(locationFromUpdateRequest));
         return converter.toDto(updatedLocation);
     }
 

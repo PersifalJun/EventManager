@@ -15,7 +15,7 @@ import java.util.List;
 
 @Getter
 @Setter
-@ToString(exclude = {"password", "ownEvents", "bookedEvents"})
+@ToString(exclude = {"password", "ownEvents", "registrations"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 @Table(name = "users")
@@ -62,13 +62,4 @@ public class UserEntity {
         e.setOwner(this);
     }
 
-    public void addBookedEvent(EventRegistrationEntity registration) {
-        registrations.add(registration);
-        registration.setUser(this);
-    }
-
-    public void removeBookedEvent(EventRegistrationEntity registration) {
-        registrations.remove(registration);
-        registration.setUser(null);
-    }
 }

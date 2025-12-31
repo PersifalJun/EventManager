@@ -53,7 +53,7 @@ public class EventController {
             @Valid EventPageFilter pageFilter
     ) {
         log.info("Get request for getting events booked by user");
-        return eventService.findEventsBookedByUser(getAuthenticatedUser(), pageFilter)
+        return eventService.findBookedEventByUserId(getAuthenticatedUser(), pageFilter)
                 .stream()
                 .map(converter::toDto)
                 .toList();

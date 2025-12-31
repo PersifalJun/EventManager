@@ -28,7 +28,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
             HttpServletResponse response,
             AccessDeniedException accessDeniedException
     ) throws IOException {
-        log.error("Handling access denied exception", accessDeniedException);
+        log.warn("Handling access denied exception", accessDeniedException);
         var messageResponse = new ErrorMessageResponse(
                 "Forbidden",
                 accessDeniedException.getMessage(),

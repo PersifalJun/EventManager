@@ -10,7 +10,7 @@ public record EventUpdateRequestDto(
         @Size(min = 1, max = 50, message = "Min name size is 1, max is 50")
         String name,
         @NotNull(message = "Event maxPlaces can not be null")
-        @Min(value = 0,message = "Min count of maxPlaces is 0")
+        @Min(value = 0, message = "Min count of maxPlaces is 0")
         Integer maxPlaces,
         @NotBlank(message = "Event date can not be blank")
         @NotPastDateTime(message = "date must be now or in the future")
@@ -19,10 +19,10 @@ public record EventUpdateRequestDto(
         @Positive(message = "Event cost can not be negative or zero")
         BigDecimal cost,
         @NotNull(message = "Event duration can not be null")
-        @Min(value = 30,message = "Min duration is 30")
+        @Min(value = 30, message = "Min duration is 30")
         Integer duration,
         @NotNull(message = "Event locationId can not be null")
-        @Min(value = 1,message = "Min locationId is 1")
+        @Min(value = 1, message = "Min locationId is 1")
         Integer locationId
 ) {
 }

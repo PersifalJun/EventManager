@@ -2,7 +2,6 @@ package ru.haritonenko.eventmanager.event.api.custom.validation.validator;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.haritonenko.eventmanager.event.api.custom.validation.annotation.NotPastDateTime;
 

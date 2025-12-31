@@ -14,9 +14,10 @@ import ru.haritonenko.eventmanager.event.api.dto.filter.EventSearchRequestDto;
 import ru.haritonenko.eventmanager.event.api.exception.EventCountPlacesException;
 import ru.haritonenko.eventmanager.event.api.exception.EventInvalidStatusException;
 import ru.haritonenko.eventmanager.event.api.exception.EventNotFoundException;
-import ru.haritonenko.eventmanager.event.api.exception.EventPlacesOverflowException;
-import ru.haritonenko.eventmanager.event.registration.db.EventRegistrationRepository;
+import ru.haritonenko.eventmanager.event.registration.db.repository.EventRegistrationRepository;
 import ru.haritonenko.eventmanager.event.registration.db.entity.EventRegistrationEntity;
+import ru.haritonenko.eventmanager.event.registration.exception.EventRegistrationNotFoundException;
+import ru.haritonenko.eventmanager.event.registration.exception.InvalidEventRegistrationStatusException;
 import ru.haritonenko.eventmanager.event.registration.status.EventRegistrationStatus;
 import ru.haritonenko.eventmanager.location.api.exception.LocationNotFoundException;
 import ru.haritonenko.eventmanager.location.db.entity.EventLocationEntity;
@@ -26,7 +27,6 @@ import ru.haritonenko.eventmanager.event.db.entity.EventEntity;
 import ru.haritonenko.eventmanager.event.db.repository.EventRepository;
 import ru.haritonenko.eventmanager.event.service.domain.Event;
 import ru.haritonenko.eventmanager.location.db.repository.EventLocationRepository;
-import ru.haritonenko.eventmanager.user.api.exception.UserBookedEventException;
 import ru.haritonenko.eventmanager.user.api.exception.UserNotFoundException;
 import ru.haritonenko.eventmanager.user.api.role.UserRole;
 import ru.haritonenko.eventmanager.user.db.entity.UserEntity;
@@ -110,50 +110,52 @@ public class EventService {
         var user = getUserByIdOrThrow(ownerId);
         var event = getEventByIdOrThrow(eventId);
 
-        checkUserOrAdminRoleToUpdateOrDelete(user, event);
+        checkRoleIsAdminAndEventOwnerIsUserToUpdateOrDeleteOrThrow(user, event);
 
         var newLocation = getEventLocationByIdOrThrow(eventToUpdate.locationId());
         var oldLocation = event.getLocation();
 
         checkLocationCapacityIsMoreOrEqualsEventPlacesOrThrow(newLocation, eventToUpdate.maxPlaces());
-        checkCountOfOccupiedPlacesLessThanMax(eventToUpdate, event);
+        checkCountOfOccupiedPlacesLessThanMaxOrThrow(eventToUpdate, event);
 
         if (!oldLocation.getId().equals(newLocation.getId())) {
             oldLocation.getEvents().remove(event);
-            newLocation.getEvents().add(event);
             event.setLocation(newLocation);
+            newLocation.getEvents().add(event);
         }
+
         event.setName(eventToUpdate.name());
         event.setMaxPlaces(eventToUpdate.maxPlaces());
         event.setDate(eventToUpdate.date());
         event.setCost(eventToUpdate.cost());
         event.setDuration(eventToUpdate.duration());
-        event.setLocation(newLocation);
 
         log.info("Event with id: {} was successfully updated", eventId);
         return converter.toDomain(event);
     }
 
     public List<Event> findEventsCreatedByUser(
-            User user,
+            User userFromRequest,
             EventPageFilter pageFilter
     ) {
         log.info("Searching all user's created events");
-        checkUserRoleToGetListOfOwnEvents(user.id());
+        var user = getUserByIdOrThrow(userFromRequest.id());
+        checkUserRoleIsUserToGetListOfOwnEventsOrThrow(user);
         var createdEvents = eventRepository.searchCreatedEventsByUserId(
-                user.id(),
+                user.getId(),
                 getPageable(pageFilter)
         );
         return getSortedEventListByEventId(createdEvents);
     }
 
-    public List<Event> findEventsBookedByUser(
+    public List<Event> findBookedEventByUserId(
             User user,
             EventPageFilter pageFilter
     ) {
         log.info("Searching all user's booked events");
         var bookedEvents = eventRepository.searchBookedEventsByUserId(
                 user.id(),
+                EventRegistrationStatus.ACTIVE,
                 getPageable(pageFilter)
         );
         return getSortedEventListByEventId(bookedEvents);
@@ -168,7 +170,7 @@ public class EventService {
         BigDecimal costMin = isNull(eventFilter.costMin()) ? null : BigDecimal.valueOf(eventFilter.costMin().doubleValue());
         BigDecimal costMax = isNull(eventFilter.costMax()) ? null : BigDecimal.valueOf(eventFilter.costMax().doubleValue());
 
-        checkFilterConstraintsOrThrow(
+        checkFilterConstraintsAreValidOrThrow(
                 costMin,
                 costMax,
                 eventFilter.placesMin(),
@@ -203,43 +205,28 @@ public class EventService {
 
         log.info("Checking registry conditions");
         checkEventCreatorIsNotMemberOrThrow(event, userId);
-        checkEventStatusWhileRegistrationOrThrow(event);
+        checkEventStatusIsWaitStartOrThrow(event);
 
-        var regOpt = eventRegistrationRepository.findByUserIdAndEventId(userId, eventId);
+        var optionalUserRegistration = eventRegistrationRepository.findByUserIdAndEventId(userId, eventId);
 
-        if (regOpt.isPresent()) {
-            var reg = regOpt.get();
+        if (optionalUserRegistration.isPresent()) {
+            var registration = optionalUserRegistration.get();
 
-            if (reg.getStatus() == EventRegistrationStatus.ACTIVE) {
-                throw new UserAlreadyRegisteredOnEventException("You have already registered on this event");
-            }
-
+            checkRegistrationStatusIsNotActiveOrThrow(registration);
             int updated = eventRepository.incOccupiedPlaces(eventId);
-            if (updated == 0) {
-                log.error("Error while booking event place");
-                throw new EventPlacesOverflowException("Places are overflowed");
-            }
-
+            checkCorrectUpdateOrThrow(updated, "Places are overflowed");
             eventRegistrationRepository.updateStatus(userId, eventId, EventRegistrationStatus.ACTIVE);
-
-            var updatedEvent = getEventByIdOrThrow(eventId);
-            return converter.toDomain(updatedEvent);
+        } else {
+            var registration = new EventRegistrationEntity(
+                    null,
+                    user,
+                    event,
+                    EventRegistrationStatus.ACTIVE
+            );
+            eventRegistrationRepository.save(registration);
+            int updated = eventRepository.incOccupiedPlaces(eventId);
+            checkCorrectUpdateOrThrow(updated, "Places are overflowed");
         }
-
-        int updated = eventRepository.incOccupiedPlaces(eventId);
-        if (updated == 0) {
-            log.error("Error while booking event place");
-            throw new EventPlacesOverflowException("Places are overflowed");
-        }
-
-        var registration = new EventRegistrationEntity(
-                null,
-                user,
-                event,
-                EventRegistrationStatus.ACTIVE
-        );
-        eventRegistrationRepository.save(registration);
-
         var updatedEvent = getEventByIdOrThrow(eventId);
         return converter.toDomain(updatedEvent);
     }
@@ -252,9 +239,17 @@ public class EventService {
         var user = getUserByIdOrThrow(ownerId);
 
         log.info("Checking conditions before deleting event");
-        checkUserOrAdminRoleToUpdateOrDelete(user, event);
-        checkEventStatusWhileDeletingEventOrRegistrationRequestByIdOrThrow(event);
+        checkRoleIsAdminAndEventOwnerIsUserToUpdateOrDeleteOrThrow(user, event);
+        checkEventStatusIsWaitStartOrThrow(event);
         event.setStatus(EventStatus.CANCELLED);
+        int updatedStatus = eventRegistrationRepository.updateStatusByEventId(
+                eventId,
+                EventRegistrationStatus.CANCELLED,
+                EventRegistrationStatus.ACTIVE
+        );
+        int updatedPlaces = eventRepository.resetOccupiedPlaces(eventId);
+        checkCorrectUpdateOrThrow(updatedStatus, "Error while updating event status");
+        checkCorrectUpdateOrThrow(updatedPlaces, "Error while updating event occupied places");
     }
 
     @Transactional
@@ -262,24 +257,18 @@ public class EventService {
         log.info("Cancelling event registration by id: {}", eventId);
 
         var event = getEventByIdOrThrow(eventId);
-        checkEventStatusWhileDeletingEventOrRegistrationRequestByIdOrThrow(event);
+        checkEventStatusIsWaitStartOrThrow(event);
 
-        var reg = eventRegistrationRepository.findByUserIdAndEventId(userId, eventId)
-                .orElseThrow(() -> new EventNotFoundException("Registration not found"));
+        var registration = getEventRegistrationByUserIdAndEventIdOrThrow(userId, eventId);
 
-        if (reg.getStatus() != EventRegistrationStatus.ACTIVE) {
-            throw new EventNotFoundException("Active registration not found");
-        }
-
+        checkRegistrationStatusIsActiveOrThrow(registration);
         int updated = eventRepository.decOccupiedPlaces(eventId);
-        if (updated == 0) {
-            throw new EventCountPlacesException("Places quantity can`t be less than zero");
-        }
+        checkCorrectUpdateOrThrow(updated, "Places can not be less than zero");
 
         eventRegistrationRepository.updateStatus(userId, eventId, EventRegistrationStatus.CANCELLED);
     }
 
-    private void checkFilterConstraintsOrThrow(
+    private void checkFilterConstraintsAreValidOrThrow(
             BigDecimal costMin,
             BigDecimal costMax,
             Integer placesMin,
@@ -292,22 +281,22 @@ public class EventService {
     ) {
         if (nonNull(placesMin) && nonNull(placesMax)
                 && placesMin > placesMax) {
-            log.error("Error while checking event places");
+            log.warn("Error while checking event places");
             throw new IllegalArgumentException("placesMin can not be more than placesMax");
         }
         if (nonNull(durationMin)
                 && nonNull(durationMax) && durationMin > durationMax) {
-            log.error("Error while checking event duration");
+            log.warn("Error while checking event duration");
             throw new IllegalArgumentException("durationMin can not be more than durationMax");
         }
         if (nonNull(costMin) && nonNull(costMax)
                 && costMin.compareTo(costMax) > 0) {
-            log.error("Error while checking event cost");
+            log.warn("Error while checking event cost");
             throw new IllegalArgumentException("costMin can not be  more than costMax");
         }
         if (nonNull(dateStartAfter) && nonNull(dateStartBefore)
                 && dateStartAfter.compareTo(dateStartBefore) > 0) {
-            log.error("Error while checking event date");
+            log.warn("Error while checking event date");
             throw new IllegalArgumentException("dateStartAfter can not be later than dateStartBefore");
         }
     }
@@ -315,7 +304,7 @@ public class EventService {
     private UserEntity getUserByIdOrThrow(Integer ownerId) {
         return userRepository.findById(ownerId)
                 .orElseThrow(() -> {
-                    log.error("Error while finding user by id: {}", ownerId);
+                    log.warn("Error while finding user by id: {}", ownerId);
                     return new UserNotFoundException("User not found");
                 });
     }
@@ -323,7 +312,7 @@ public class EventService {
     private EventEntity getEventByIdOrThrow(Integer eventId) {
         return eventRepository.findById(eventId)
                 .orElseThrow(() -> {
-                    log.error("Error while searching for event by id: {}", eventId);
+                    log.warn("Error while searching for event by id: {}", eventId);
                     return new EventNotFoundException(
                             "No found event by id = %s".formatted(eventId));
                 });
@@ -334,9 +323,21 @@ public class EventService {
     ) {
         return eventLocationRepository.findById(locationId)
                 .orElseThrow(() -> {
-                    log.error("Error while searching for event location by id: {}", locationId);
+                    log.warn("Error while searching for event location by id: {}", locationId);
                     return new LocationNotFoundException(
                             "No found event location by id = %s".formatted(locationId));
+                });
+    }
+
+    private EventRegistrationEntity getEventRegistrationByUserIdAndEventIdOrThrow(
+            Integer userId,
+            Integer eventId
+    ) {
+        return eventRegistrationRepository.findByUserIdAndEventId(userId, eventId)
+                .orElseThrow(() -> {
+                    log.warn("Error while searching for registration  by userId: {} and eventId: {} ", userId, eventId);
+                    return new EventRegistrationNotFoundException(
+                            "Registration not found by userId = %s and eventId = %s".formatted(userId, eventId));
                 });
     }
 
@@ -357,27 +358,14 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
-    private void checkEventStatusWhileRegistrationOrThrow(
-            EventEntity eventToBeBookedByUser
-    ) {
-        if (eventToBeBookedByUser.getStatus() == EventStatus.CANCELLED
-                || eventToBeBookedByUser.getStatus() == EventStatus.FINISHED) {
-            log.error("Error while checking event status");
-            throw new EventInvalidStatusException("This event has already cancelled or finished");
-        }
-        if (eventToBeBookedByUser.getStatus() == EventStatus.STARTED) {
-            log.error("Error while checking event status");
-            throw new EventInvalidStatusException("You can`t register,because this event has already started");
-        }
-    }
 
-    public void checkEventStatusWhileDeletingEventOrRegistrationRequestByIdOrThrow(
-            EventEntity eventToDeleteByOwner
+    public void checkEventStatusIsWaitStartOrThrow(
+            EventEntity event
     ) {
-        if (eventToDeleteByOwner.getStatus() != EventStatus.WAIT_START) {
-            log.error("Error while checking event status to delete event or registration request");
-            throw new EventInvalidStatusException("You can`t delete event or registration request " +
-                    "when it has already started, cancelled or finished");
+        if (event.getStatus() != EventStatus.WAIT_START) {
+            log.warn("Error while checking event status to delete event or cancel registration");
+            throw new EventInvalidStatusException("Event status is not WAIT_START for that action");
+
         }
     }
 
@@ -386,7 +374,7 @@ public class EventService {
             Integer userId
     ) {
         if (Objects.equals(eventToBeBookedByUser.getOwner().getId(), userId)) {
-            log.error("Error while checking event creator");
+            log.warn("Error while checking event creator");
             throw new UserAlreadyRegisteredOnEventException("Event creator is member by default");
         }
     }
@@ -396,60 +384,67 @@ public class EventService {
             Integer eventPlaces
     ) {
         if (location.getCapacity() < eventPlaces) {
-            log.error("Error while matching location and event places count");
+            log.warn("Error while matching location and event places count");
             throw new EventCountPlacesException("Location capacity is less than event maxPlaces." +
                     " Chose new location or decrease quantity of event places.");
         }
     }
 
-    private void checkUserIsNotAlreadyRegisteredOnEventOrThrow(
-            EventEntity eventToBeBookedByUser,
-            UserEntity userToBeRegisteredOn
-    ) {
-        if (userToBeRegisteredOn.getBookedEvents().contains(eventToBeBookedByUser)) {
-            log.error("Error while checking event members");
-            throw new UserAlreadyRegisteredOnEventException("You have already registered on this event");
-        }
-    }
-
-    private void checkUserOrAdminRoleToUpdateOrDelete(
+    private void checkRoleIsAdminAndEventOwnerIsUserToUpdateOrDeleteOrThrow(
             UserEntity user,
             EventEntity event
     ) {
         if (user.getUserRole() != UserRole.ADMIN
                 && !event.getOwner().getId().equals(user.getId())) {
-            log.error("Error while checking user and admin role");
+            log.warn("Error while checking user and admin role");
             throw new AccessDeniedException("You are not owner of this event");
         }
     }
 
-    private void checkUserRoleToGetListOfOwnEvents(
-            Integer userId
+    private void checkUserRoleIsUserToGetListOfOwnEventsOrThrow(
+            UserEntity user
     ) {
-        var user = getUserByIdOrThrow(userId);
         if (user.getUserRole() != UserRole.USER) {
-            log.error("Error while checking user role");
+            log.warn("Error while checking user role");
             throw new AccessDeniedException("You are not owner of this event");
         }
     }
 
-    private void checkCountOfOccupiedPlacesLessThanMax(
+    private void checkCountOfOccupiedPlacesLessThanMaxOrThrow(
             EventUpdateRequestDto eventToUpdate,
             EventEntity event
     ) {
         if (eventToUpdate.maxPlaces() < event.getOccupiedPlaces()) {
-            log.error("Error while checking count of places");
+            log.warn("Error while checking count of places");
             throw new EventCountPlacesException("Occupied places can't be more than event maxPlaces ");
         }
     }
 
-    private void checkUserBookedEventsListContainsEventOrThrow(
-            UserEntity user,
-            EventEntity event
+    private void checkRegistrationStatusIsNotActiveOrThrow(
+            EventRegistrationEntity registration
     ) {
-        if (!user.getBookedEvents().contains(event)) {
-            log.error("Error while cancelling registry request");
-            throw new UserBookedEventException("This event isn't booked by this user");
+        if (registration.getStatus() == EventRegistrationStatus.ACTIVE) {
+            log.warn("Error while checking registration not active status");
+            throw new UserAlreadyRegisteredOnEventException("You have already registered on this event");
+        }
+    }
+
+    private void checkRegistrationStatusIsActiveOrThrow(
+            EventRegistrationEntity registration
+    ) {
+        if (registration.getStatus() != EventRegistrationStatus.ACTIVE) {
+            log.warn("Error while checking registration active status");
+            throw new InvalidEventRegistrationStatusException("This registration already not active");
+        }
+    }
+
+    private void checkCorrectUpdateOrThrow(
+            Integer updated,
+            String message
+    ) {
+        if (updated == 0) {
+            log.warn("Error while updating event place");
+            throw new IllegalStateException(message);
         }
     }
 }

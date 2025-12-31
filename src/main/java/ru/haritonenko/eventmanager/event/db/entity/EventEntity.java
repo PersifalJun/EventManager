@@ -3,7 +3,6 @@ package ru.haritonenko.eventmanager.event.db.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import ru.haritonenko.eventmanager.event.api.custom.validation.annotation.NotPastDateTime;
 import ru.haritonenko.eventmanager.event.api.status.EventStatus;
 import ru.haritonenko.eventmanager.event.registration.db.entity.EventRegistrationEntity;
 import ru.haritonenko.eventmanager.location.db.entity.EventLocationEntity;
@@ -46,15 +45,14 @@ public class EventEntity {
     private List<EventRegistrationEntity> registrations = new ArrayList<>();
 
     @NotNull(message = "Event maxPlaces can not be null")
-    @Min(value = 0,message = "Min count of maxPlaces is 0")
+    @Min(value = 0, message = "Min count of maxPlaces is 0")
     private Integer maxPlaces;
 
     @NotNull(message = "Event occupiedPlaces can not be null")
-    @Min(value = 0,message = "Min count of occupiedPlaces is 0")
+    @Min(value = 0, message = "Min count of occupiedPlaces is 0")
     private Integer occupiedPlaces;
 
     @NotBlank(message = "Event date can not be blank")
-    @NotPastDateTime(message = "date must be now or in the future")
     private String date;
 
     @NotNull(message = "Event cost can not be null")
@@ -62,20 +60,11 @@ public class EventEntity {
     private BigDecimal cost;
 
     @NotNull(message = "Event duration can not be null")
-    @Min(value = 30,message = "Min duration is 30")
+    @Min(value = 30, message = "Min duration is 30")
     private Integer duration;
 
     @NotNull(message = "Event status can not be null")
     @Enumerated(EnumType.STRING)
     private EventStatus status;
 
-    public void addRegistration(EventRegistrationEntity registration) {
-        registrations.add(registration);
-        registration.setEvent(this);
-    }
-
-    public void removeRegistration(EventRegistrationEntity registration) {
-        registrations.remove(registration);
-        registration.setEvent(null);
-    }
 }

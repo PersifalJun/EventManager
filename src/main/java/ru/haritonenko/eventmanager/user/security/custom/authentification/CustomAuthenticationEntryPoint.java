@@ -28,7 +28,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             HttpServletResponse response,
             AuthenticationException authException
     ) throws IOException {
-        log.error("Handling authentication exception", authException);
+        log.warn("Handling authentication exception", authException);
         var messageResponse = new ErrorMessageResponse(
                 "Failed to authenticate",
                 authException.getMessage(),

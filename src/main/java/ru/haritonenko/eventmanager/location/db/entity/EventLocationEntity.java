@@ -54,9 +54,4 @@ public class EventLocationEntity {
         events.add(e);
         e.setLocation(this);
     }
-
-    public void removeEvent(EventEntity e) {
-        events.remove(e);
-        e.setLocation(null);
-    }
 }

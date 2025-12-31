@@ -18,6 +18,8 @@ import ru.haritonenko.eventmanager.user.service.UserService;
 
 import java.util.Map;
 
+import static java.util.Objects.isNull;
+
 @Slf4j
 @RestController
 @RequestMapping("/users")
@@ -63,8 +65,8 @@ public class UserController {
     @GetMapping("/debug/auth")
     public Object auth(Authentication authentication) {
         return Map.of(
-                "name", authentication == null ? null : authentication.getName(),
-                "authorities", authentication == null ? null : authentication.getAuthorities()
+                "name", isNull(authentication) ? null : authentication.getName(),
+                "authorities", isNull(authentication) ? null : authentication.getAuthorities()
         );
     }
 }

@@ -1,5 +1,6 @@
 package ru.haritonenko.eventmanager.error.handler;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,9 @@ import ru.haritonenko.eventmanager.event.api.exception.EventCountPlacesException
 import ru.haritonenko.eventmanager.event.api.exception.EventInvalidStatusException;
 import ru.haritonenko.eventmanager.event.api.exception.EventNotFoundException;
 import ru.haritonenko.eventmanager.event.api.exception.EventPlacesOverflowException;
+import ru.haritonenko.eventmanager.event.registration.exception.EventRegistrationNotFoundException;
+import ru.haritonenko.eventmanager.event.registration.exception.InvalidEventRegistrationStatusException;
+import ru.haritonenko.eventmanager.location.api.exception.LocationCountPlacesException;
 import ru.haritonenko.eventmanager.user.api.exception.UserAlreadyRegisteredOnEventException;
 import ru.haritonenko.eventmanager.location.api.exception.LocationNotFoundException;
 import ru.haritonenko.eventmanager.user.api.exception.UserAlreadyRegisteredException;
@@ -46,7 +50,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleNoFoundLocationException(
             LocationNotFoundException ex
     ) {
-        log.error("Got NoFoundLocationException", ex);
+        log.warn("Got NoFoundLocationException", ex);
         var errorDto = getErrorMessageResponse("Location search error",
                 ex.getMessage());
         return ResponseEntity.
@@ -58,7 +62,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleNoFoundUserException(
             UserNotFoundException ex
     ) {
-        log.error("Got NoFoundUserException", ex);
+        log.warn("Got NoFoundUserException", ex);
         var errorDto = getErrorMessageResponse("User search error",
                 ex.getMessage());
         return ResponseEntity.
@@ -70,7 +74,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleUserAlreadyRegisteredException(
             UserAlreadyRegisteredException ex
     ) {
-        log.error("Got AlreadyRegisteredUserException", ex);
+        log.warn("Got AlreadyRegisteredUserException", ex);
         var errorDto = getErrorMessageResponse("User registration error",
                 ex.getMessage());
         return ResponseEntity.
@@ -94,7 +98,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleDateTimeParseException(
             DateTimeParseException ex
     ) {
-        log.error("Got DateTimeParseException", ex);
+        log.warn("Got DateTimeParseException", ex);
         var errorDto = getErrorMessageResponse("Error while parsing date time",
                 ex.getMessage());
         return ResponseEntity
@@ -106,7 +110,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleEventNotFoundException(
             EventNotFoundException ex
     ) {
-        log.error("Got EventNotFoundException", ex);
+        log.warn("Got EventNotFoundException", ex);
         var errorDto = getErrorMessageResponse("Event search error",
                 ex.getMessage());
         return ResponseEntity
@@ -118,7 +122,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleIllegalArgumentException(
             IllegalArgumentException ex
     ) {
-        log.error("Got IllegalArgumentException", ex);
+        log.warn("Got IllegalArgumentException", ex);
         var errorDto = getErrorMessageResponse("Illegal argument error",
                 ex.getMessage());
         return ResponseEntity.
@@ -130,8 +134,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleEventPlacesOverflowException(
             EventPlacesOverflowException ex
     ) {
-        log.error("Got EventPlacesOverflowException", ex);
-        var errorDto = getErrorMessageResponse("Error while register on event",
+        log.warn("Got EventPlacesOverflowException", ex);
+        var errorDto = getErrorMessageResponse("Error while booking event place",
                 ex.getMessage());
         return ResponseEntity.
                 status(HttpStatus.BAD_REQUEST)
@@ -142,7 +146,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleUserAlreadyRegisteredOnEventException(
             UserAlreadyRegisteredOnEventException ex
     ) {
-        log.error("Got UserAlreadyRegisteredOnEventException", ex);
+        log.warn("Got UserAlreadyRegisteredOnEventException", ex);
         var errorDto = getErrorMessageResponse("Error while register on event",
                 ex.getMessage());
         return ResponseEntity.
@@ -154,7 +158,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleEventCountPlacesException(
             EventCountPlacesException ex
     ) {
-        log.error("Got EventCountPlacesException", ex);
+        log.warn("Got EventCountPlacesException", ex);
         var errorDto = getErrorMessageResponse("Error while matching location and event places count",
                 ex.getMessage());
         return ResponseEntity.
@@ -166,7 +170,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleUserBookedEventException(
             UserBookedEventException ex
     ) {
-        log.error("Got UserBookedEventException", ex);
+        log.warn("Got UserBookedEventException", ex);
         var errorDto = getErrorMessageResponse("Error while cancelling registry request",
                 ex.getMessage());
         return ResponseEntity.
@@ -178,7 +182,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleEventInvalidStatusException(
             EventInvalidStatusException ex
     ) {
-        log.error("Got EventInvalidStatusException", ex);
+        log.warn("Got EventInvalidStatusException", ex);
         var errorDto = getErrorMessageResponse("Error while checking status for deleting" +
                         " event or registration request",
                 ex.getMessage());
@@ -187,6 +191,71 @@ public class GlobalExceptionHandler {
                 .body(errorDto);
     }
 
+    @ExceptionHandler(EventRegistrationNotFoundException.class)
+    public ResponseEntity<ErrorMessageResponse> handleEventRegistrationNotFoundException(
+            EventRegistrationNotFoundException ex
+    ) {
+        log.warn("Got EventRegistrationNotFoundException", ex);
+        var errorDto = getErrorMessageResponse("Registration search error",
+                ex.getMessage());
+        return ResponseEntity.
+                status(HttpStatus.BAD_REQUEST)
+                .body(errorDto);
+    }
+
+    @ExceptionHandler(InvalidEventRegistrationStatusException.class)
+    public ResponseEntity<ErrorMessageResponse> handleInvalidEventRegistrationStatusException(
+            InvalidEventRegistrationStatusException ex
+    ) {
+        log.warn("Got InvalidEventRegistrationStatusException", ex);
+        var errorDto = getErrorMessageResponse("Error while checking registration status",
+                ex.getMessage());
+        return ResponseEntity.
+                status(HttpStatus.BAD_REQUEST)
+                .body(errorDto);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorMessageResponse> handleIllegalStateException(
+            IllegalStateException ex
+    ) {
+        log.warn("Got IllegalStateException", ex);
+        var errorDto = getErrorMessageResponse("Error while updating event",
+                ex.getMessage());
+        return ResponseEntity.
+                status(HttpStatus.CONFLICT)
+                .body(errorDto);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorMessageResponse> handleConstraintViolationException(
+            ConstraintViolationException ex
+    ) {
+        log.warn("Got ConstraintViolationException", ex);
+
+        String detailedMessage = ex.getConstraintViolations()
+                .stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .collect(Collectors.joining(","));
+
+        var errorDto = getErrorMessageResponse("Validation Error", detailedMessage);
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errorDto);
+    }
+
+    @ExceptionHandler(LocationCountPlacesException.class)
+    public ResponseEntity<ErrorMessageResponse> handleLocationCountPlacesException(
+            LocationCountPlacesException ex
+    ) {
+        log.warn("Got LocationCountPlacesException", ex);
+        var errorDto = getErrorMessageResponse("Error while updating location",
+                ex.getMessage());
+        return ResponseEntity.
+                status(HttpStatus.BAD_REQUEST)
+                .body(errorDto);
+    }
 
     private ErrorMessageResponse getErrorMessageResponse(
             String message,

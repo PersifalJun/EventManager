@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.haritonenko.eventmanager.location.api.converter.EventLocationEntityConverter;
+import ru.haritonenko.eventmanager.location.api.exception.LocationCountPlacesException;
 import ru.haritonenko.eventmanager.location.service.domain.EventLocation;
 import ru.haritonenko.eventmanager.location.db.entity.EventLocationEntity;
 import ru.haritonenko.eventmanager.location.api.exception.LocationNotFoundException;
@@ -89,6 +90,7 @@ public class EventLocationService {
     public EventLocation updateLocation(Integer id, EventLocation eventLocationToUpdate) {
         log.info("Updating location with id: {}", id);
         checkLocationIsExistedByIdOrThrow(id);
+        checkNewLocationCapacityMoreOrEqualsOldOrThrow(id,eventLocationToUpdate);
         locationRepository.updateLocation(
                 id,
                 eventLocationToUpdate.name(),
@@ -116,6 +118,23 @@ public class EventLocationService {
             log.warn("Error while finding location by id: {}", id);
             throw new LocationNotFoundException(
                     "No found location by id = %s".formatted(id));
+        }
+    }
+
+    private void checkNewLocationCapacityMoreOrEqualsOldOrThrow(
+            Integer id,
+            EventLocation eventLocationToUpdate
+    ){
+         var oldLocation = locationRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Error while getting location by id: {}", id);
+                    return new LocationNotFoundException(
+                            "No found location by id = %s".formatted(id));
+                });
+        if (oldLocation.getCapacity() < eventLocationToUpdate.capacity()) {
+            log.warn("Error while changing location capacity ");
+            throw new LocationCountPlacesException("You can't decrease location capacity, " +
+                    "because places might be occupied by users");
         }
     }
 }

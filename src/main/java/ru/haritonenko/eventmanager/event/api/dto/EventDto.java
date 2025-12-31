@@ -17,10 +17,10 @@ public record EventDto(
         @NotBlank(message = "Event ownerId can not be blank")
         String ownerId,
         @NotNull(message = "Event maxPlaces can not be null")
-        @Min(value = 0,message = "Min count of maxPlaces is 0")
+        @Min(value = 0, message = "Min count of maxPlaces is 0")
         Integer maxPlaces,
         @NotNull(message = "Event occupiedPlaces can not be null")
-        @Min(value = 0,message = "Min count of occupiedPlaces is 0")
+        @Min(value = 0, message = "Min count of occupiedPlaces is 0")
         Integer occupiedPlaces,
         @NotBlank(message = "Event date can not be blank")
         @NotPastDateTime(message = "date must be now or in the future")
@@ -29,7 +29,7 @@ public record EventDto(
         @Positive(message = "Event cost can not be negative or zero")
         BigDecimal cost,
         @NotNull(message = "Event duration can not be null")
-        @Min(value = 30,message = "Min duration is 30")
+        @Min(value = 30, message = "Min duration is 30")
         Integer duration,
         @NotNull(message = "Event locationId can not be null")
         Integer locationId,

@@ -1,4 +1,4 @@
-package ru.haritonenko.eventmanager.event.registration.db;
+package ru.haritonenko.eventmanager.event.registration.db.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -21,12 +21,21 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
             SET r.status = :status
             WHERE r.user.id = :userId AND r.event.id = :eventId
             """)
-    int updateStatus(
+    void updateStatus(
             @Param("userId") Integer userId,
             @Param("eventId") Integer eventId,
             @Param("status") EventRegistrationStatus status
     );
 
-    @Transactional(readOnly = true)
-    boolean existsByUserIdAndEventIdAndStatus(Integer userId, Integer eventId, EventRegistrationStatus status);
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            UPDATE EventRegistrationEntity r
+            SET r.status = :newStatus
+            WHERE r.event.id = :eventId AND r.status = :oldStatus
+            """)
+    int updateStatusByEventId(
+            @Param("eventId") Integer eventId,
+            @Param("newStatus") EventRegistrationStatus newStatus,
+            @Param("oldStatus") EventRegistrationStatus oldStatus);
+
 }

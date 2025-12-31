@@ -39,3 +39,8 @@ app:
   location:
     default-page-size: 5
     default-page-number: 0
+
+scheduler:
+  enabled: true
+  event-status:
+    fixed-delay-ms: 5000
