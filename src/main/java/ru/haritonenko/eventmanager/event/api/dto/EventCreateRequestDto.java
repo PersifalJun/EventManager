@@ -1,7 +1,7 @@
 package ru.haritonenko.eventmanager.event.api.dto;
 
 import jakarta.validation.constraints.*;
-import ru.haritonenko.eventmanager.event.api.custom.validation.annotation.NotPastDateTime;
+import ru.haritonenko.eventmanager.event.domain.custom.validation.annotation.NotPastDateTime;
 
 public record EventCreateRequestDto(
         @NotBlank(message = "Event name can not be blank")

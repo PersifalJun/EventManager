@@ -1,7 +1,7 @@
 package ru.haritonenko.eventmanager.event.api.dto.filter;
 
 import jakarta.validation.constraints.*;
-import ru.haritonenko.eventmanager.event.api.status.EventStatus;
+import ru.haritonenko.eventmanager.event.domain.status.EventStatus;
 
 public record EventSearchRequestDto(
         @Size(min = 1, max = 50, message = "Min name size is 1, max is 50")

@@ -10,11 +10,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ru.haritonenko.eventmanager.user.security.service.AuthenticationService;
 import ru.haritonenko.eventmanager.user.security.jwt.JwtResponse;
-import ru.haritonenko.eventmanager.user.api.converter.UserDtoConverter;
+import ru.haritonenko.eventmanager.user.domain.converter.UserDtoConverter;
 import ru.haritonenko.eventmanager.user.api.dto.UserDto;
 import ru.haritonenko.eventmanager.user.api.dto.authorization.UserCredentials;
 import ru.haritonenko.eventmanager.user.api.dto.registration.UserRegistration;
-import ru.haritonenko.eventmanager.user.service.UserService;
+import ru.haritonenko.eventmanager.user.domain.service.UserService;
 
 import java.util.Map;
 

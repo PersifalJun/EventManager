@@ -13,8 +13,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ru.haritonenko.eventmanager.user.security.jwt.JwtTokenManager;
-import ru.haritonenko.eventmanager.user.service.domain.User;
-import ru.haritonenko.eventmanager.user.service.UserService;
+import ru.haritonenko.eventmanager.user.domain.User;
+import ru.haritonenko.eventmanager.user.domain.service.UserService;
 
 import java.io.IOException;
 import java.util.List;

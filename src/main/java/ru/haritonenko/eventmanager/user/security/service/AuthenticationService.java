@@ -8,7 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ru.haritonenko.eventmanager.user.api.dto.authorization.UserCredentials;
 import ru.haritonenko.eventmanager.user.security.jwt.JwtTokenManager;
-import ru.haritonenko.eventmanager.user.service.domain.User;
+import ru.haritonenko.eventmanager.user.domain.User;
 
 import static java.util.Objects.isNull;
 

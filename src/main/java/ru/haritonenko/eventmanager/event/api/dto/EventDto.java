@@ -2,8 +2,8 @@ package ru.haritonenko.eventmanager.event.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.*;
-import ru.haritonenko.eventmanager.event.api.custom.validation.annotation.NotPastDateTime;
-import ru.haritonenko.eventmanager.event.api.status.EventStatus;
+import ru.haritonenko.eventmanager.event.domain.custom.validation.annotation.NotPastDateTime;
+import ru.haritonenko.eventmanager.event.domain.status.EventStatus;
 
 import java.math.BigDecimal;
 

@@ -3,9 +3,9 @@ package ru.haritonenko.eventmanager.event.registration.db.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import ru.haritonenko.eventmanager.event.db.entity.EventEntity;
+import ru.haritonenko.eventmanager.event.domain.db.entity.EventEntity;
 import ru.haritonenko.eventmanager.event.registration.status.EventRegistrationStatus;
-import ru.haritonenko.eventmanager.user.db.entity.UserEntity;
+import ru.haritonenko.eventmanager.user.domain.db.entity.UserEntity;
 
 @Getter
 @Setter

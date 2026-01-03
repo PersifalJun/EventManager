@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import ru.haritonenko.eventmanager.event.api.status.EventStatus;
-import ru.haritonenko.eventmanager.event.db.entity.EventEntity;
-import ru.haritonenko.eventmanager.event.db.repository.EventRepository;
+import ru.haritonenko.eventmanager.event.domain.status.EventStatus;
+import ru.haritonenko.eventmanager.event.domain.db.entity.EventEntity;
+import ru.haritonenko.eventmanager.event.domain.db.repository.EventRepository;
 import ru.haritonenko.eventmanager.event.registration.db.repository.EventRegistrationRepository;
 import ru.haritonenko.eventmanager.event.registration.status.EventRegistrationStatus;
 

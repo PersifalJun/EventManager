@@ -6,12 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.haritonenko.eventmanager.location.api.converter.EventLocationDtoConverter;
+import ru.haritonenko.eventmanager.location.domain.converter.EventLocationDtoConverter;
 import ru.haritonenko.eventmanager.location.api.dto.EventLocationCreateRequestDto;
 import ru.haritonenko.eventmanager.location.api.dto.EventLocationDto;
 import ru.haritonenko.eventmanager.location.api.dto.EventLocationUpdateRequestDto;
 import ru.haritonenko.eventmanager.location.api.dto.filter.EventLocationSearchFilter;
-import ru.haritonenko.eventmanager.location.service.EventLocationService;
+import ru.haritonenko.eventmanager.location.domain.service.EventLocationService;
 
 import java.util.List;
 

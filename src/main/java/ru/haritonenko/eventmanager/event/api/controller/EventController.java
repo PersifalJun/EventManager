@@ -6,15 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.haritonenko.eventmanager.event.api.converter.EventDtoConverter;
+import ru.haritonenko.eventmanager.event.domain.converter.EventDtoConverter;
 import ru.haritonenko.eventmanager.event.api.dto.EventCreateRequestDto;
 import ru.haritonenko.eventmanager.event.api.dto.EventDto;
 import ru.haritonenko.eventmanager.event.api.dto.EventUpdateRequestDto;
 import ru.haritonenko.eventmanager.event.api.dto.filter.EventPageFilter;
 import ru.haritonenko.eventmanager.event.api.dto.filter.EventSearchRequestDto;
-import ru.haritonenko.eventmanager.event.service.EventService;
+import ru.haritonenko.eventmanager.event.domain.service.EventService;
 import ru.haritonenko.eventmanager.user.security.service.AuthenticationService;
-import ru.haritonenko.eventmanager.user.service.domain.User;
+import ru.haritonenko.eventmanager.user.domain.User;
 
 import java.util.List;
 
